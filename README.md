@@ -1,4 +1,8 @@
 RaspberryPi
 ===========
 
-Playing with the Raspberry Pi
+Brandon and Ryan's experiments with
+the Raspberry Pi.
+
+created: 5/29/2013
+
