@@ -39,12 +39,19 @@ A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 BIT_TYPE = block.GOLD_BLOCK
 
+# Bits belonging to A addend are A_TYPE
+# Bits belonging to B addend are B_TYPE
+A_TYPE = 0
+B_TYPE = 1
+
 ####################
 # Global Variables
 ####################
 
 led_on = False
 mc = minecraft.Minecraft.create()
+a_state = [False, False, False]
+b_state = [False, False, False]
 
 ####################
 # Functions
@@ -93,6 +100,30 @@ def setup():
     mc.player.setPos(0,0,0)
 
 
+def toggle_bit(bit_type, bit_loc, index):
+    if (bit_type == B_TYPE):
+        # B type bit
+        if (b_state[index]):
+            # turn off bit
+            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
+            print "b",index," off"
+        else:
+            # turn on bit
+            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
+            print "b",index," on"
+        b_state[index] = ~b_state[index]
+    else:
+        # A type bit
+        if (a_state[index]):
+            # turn off bit
+            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
+            print "a",index," off"
+        else:
+            # turn on bit
+            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
+            print "a",index," on"
+        a_state[index] = ~a_state[index]
+
 def run():
     global mc, led_on
 
@@ -107,14 +138,14 @@ def run():
                     index = -1
                     for a_bit in A_BITS_LOC:
                         index = index + 1
-                        if (a_bit == (x,y,z)):
-                            print "a bit hit, index: ",index
+                        if (a_bit[0] == x and a_bit[2] == z):
+                            toggle_bit(A_TYPE, a_bit, index)
                     # check if B_BIT block touched
                     index = -1
                     for b_bit in B_BITS_LOC:
                         index = index + 1
-                        if (b_bit == (x,y,z)):
-                            print "b bit hit, index: ",index
+                        if (b_bit[0] == x and b_bit[2] == z):
+                            toggle_bit(B_TYPE, b_bit, index)
 
                             
             time.sleep(0.1)
