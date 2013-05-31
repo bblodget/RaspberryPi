@@ -39,6 +39,10 @@ A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 BIT_TYPE = block.GOLD_BLOCK
 
+A_PIN = [7, 11, 13]
+B_PIN = [12, 16, 18]
+
+
 # Bits belonging to A addend are A_TYPE
 # Bits belonging to B addend are B_TYPE
 A_TYPE = 0
@@ -63,8 +67,14 @@ def setup():
     # init the GPIO
     GPIO.cleanup()
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(7,GPIO.OUT)
-    GPIO.output(7,GPIO.LOW)
+
+    for pin in A_PIN:
+        GPIO.setup(pin,GPIO.OUT)
+        GPIO.output(pin,GPIO.LOW)
+
+    for pin in B_PIN:
+        GPIO.setup(pin,GPIO.OUT)
+        GPIO.output(pin,GPIO.LOW)
 
     # Create the diamond floor
     mc.setBlocks(FLOOR_ORIGIN[0], FLOOR_ORIGIN[1], FLOOR_ORIGIN[2],
@@ -97,7 +107,7 @@ def setup():
                     b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
 
     # move the player to the floor
-    mc.player.setPos(0,0,0)
+    mc.player.setPos(12,2,0)
 
 
 def toggle_bit(bit_type, bit_loc, index):
@@ -106,10 +116,12 @@ def toggle_bit(bit_type, bit_loc, index):
         if (b_state[index]):
             # turn off bit
             mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
+            GPIO.output(B_PIN[index],GPIO.LOW)
             print "b",index," off"
         else:
             # turn on bit
             mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
+            GPIO.output(B_PIN[index],GPIO.HIGH)
             print "b",index," on"
         b_state[index] = ~b_state[index]
     else:
@@ -117,10 +129,12 @@ def toggle_bit(bit_type, bit_loc, index):
         if (a_state[index]):
             # turn off bit
             mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
+            GPIO.output(A_PIN[index],GPIO.LOW)
             print "a",index," off"
         else:
             # turn on bit
             mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
+            GPIO.output(A_PIN[index],GPIO.HIGH)
             print "a",index," on"
         a_state[index] = ~a_state[index]
 
