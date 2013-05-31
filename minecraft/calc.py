@@ -79,30 +79,22 @@ def setup():
 
     # create the A "bit blocks".
     # represents the A addend.
-    for tile in A_BITS_LOC:
-        mc.setBlocks(tile[0],tile[1],tile[2],
-                    tile[0],tile[1],tile[2], BIT_TYPE)
+    for a_bit in A_BITS_LOC:
+        mc.setBlocks(a_bit[0],a_bit[1],a_bit[2],
+                    a_bit[0],a_bit[1],a_bit[2], BIT_TYPE)
 
     # create the B "bit blocks".
     # represents the B addend.
-    for tile in B_BITS_LOC:
-        mc.setBlocks(tile[0],tile[1],tile[2],
-                    tile[0],tile[1],tile[2], BIT_TYPE)
+    for b_bit in B_BITS_LOC:
+        mc.setBlocks(b_bit[0],b_bit[1],b_bit[2],
+                    b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
 
     # move the player to the floor
     mc.player.setPos(0,0,0)
 
 
-####################
-# Main
-####################
-
-def main():
-    global led_on, mc
-    time.sleep(2)
-    mc.postToChat("Minecraft Calc, Hit (Right Click) Grass Block\n"\
-                  "on Diamond floor to light torch and LED")
-    setup()
+def run():
+    global mc, led_on
 
     #loop until Ctrl C
     try:
@@ -111,20 +103,35 @@ def main():
             if blockHits:
                 for blockHit in blockHits:
                     x,y,z = blockHit.pos
-                    print x,y,z
-                    if (x == -9 and z==11):
-                        if (led_on):
-                            GPIO.output(7,GPIO.LOW)
-                            mc.setBlock(-9,3,11,0)
-                            led_on = False;
-                        else:
-                            GPIO.output(7,GPIO.HIGH)
-                            mc.setBlock(-9,3,11,50)
-                            led_on = True;
+                    # check if A_BIT block touched
+                    index = -1
+                    for a_bit in A_BITS_LOC:
+                        index = index + 1
+                        if (a_bit == (x,y,z)):
+                            print "a bit hit, index: ",index
+                    # check if B_BIT block touched
+                    index = -1
+                    for b_bit in B_BITS_LOC:
+                        index = index + 1
+                        if (b_bit == (x,y,z)):
+                            print "b bit hit, index: ",index
+
                             
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("stopped")
+
+
+####################
+# Main
+####################
+
+def main():
+    global led_on, mc
+    time.sleep(1)
+    mc.postToChat("Minecraft-pi calc.");
+    setup()
+    run()
 
 
 if __name__ == "__main__": main()
