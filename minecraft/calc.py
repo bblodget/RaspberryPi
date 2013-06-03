@@ -1,4 +1,5 @@
 """
+
 File: calc.py
 
 Minecraft-pi script that creates an environment
@@ -16,8 +17,10 @@ URL: https://github.com/bblodget/RaspberryPi
 
 Copyright (c) 2013, Brandon Blodget
 All rights reserved.
+
 """
 
+import digit_wall
 import minecraft.minecraft as minecraft
 import minecraft.block as block
 import time
@@ -37,6 +40,9 @@ AIR_SIZE = (10,100,10)
 
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
+
+A_WALL_LOC = (6,0,7)
+
 BIT_TYPE = block.GOLD_BLOCK
 
 A_PIN = [7, 11, 13]
@@ -105,6 +111,10 @@ def setup():
     for b_bit in B_BITS_LOC:
         mc.setBlocks(b_bit[0],b_bit[1],b_bit[2],
                     b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
+
+    # create the A Wall
+    a_wall = digit_wall.DigitWall(A_WALL_LOC[0], A_WALL_LOC[1], A_WALL_LOC[2],
+                                 16,16,1,block.GOLD_BLOCK,block.DIAMOND_BLOCK,0)
 
     # move the player to the floor
     mc.player.setPos(12,2,0)
