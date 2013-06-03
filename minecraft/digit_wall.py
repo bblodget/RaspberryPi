@@ -159,7 +159,7 @@ class DigitWall:
         mirror_y =self.ypos+self.wall_height-y
         mirror_x =self.xpos+self.wall_width-x
         self.segment[seg].append(mirror_x)
-        self.segment[seg].append(mirro_y)
+        self.segment[seg].append(mirror_y)
         self.segment[seg].append(self.zpos)
         self.segment[seg].append(mirror_x-self.seg_length-1)
         self.segment[seg].append(mirror_y-self.seg_width-1)
