@@ -41,7 +41,7 @@ AIR_SIZE = (10,100,10)
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 
-A_WALL_LOC = (6,0,7)
+A_WALL_LOC = (6,1,7)
 
 BIT_TYPE = block.GOLD_BLOCK
 
@@ -113,8 +113,8 @@ def setup():
                     b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
 
     # create the A Wall
-    a_wall = digit_wall.DigitWall(A_WALL_LOC[0], A_WALL_LOC[1], A_WALL_LOC[2],
-                                 16,16,1,block.GOLD_BLOCK,block.DIAMOND_BLOCK,0)
+    a_wall = digit_wall.DigitWall(mc, A_WALL_LOC[0], A_WALL_LOC[1], A_WALL_LOC[2],
+                                 8,8,1,block.GOLD_BLOCK,block.DIAMOND_BLOCK,7)
 
     # move the player to the floor
     mc.player.setPos(12,2,0)

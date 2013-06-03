@@ -96,7 +96,7 @@ class DigitWall:
         self.digit_value = digit_value
 
         # initialize the segment fields
-        _init_segments()
+        self._init_segments()
 
         # create the wall
         self._draw_wall()
@@ -119,11 +119,13 @@ class DigitWall:
         self.seg_length = seg_length
         self.seg_width = seg_width
 
+        print "seg_length: ",seg_length, " seg_width: ",seg_width
+
         # compute digit width, height and origin
         digit_width = (seg_width*2) + seg_length
-        digit_height = (seg_wdith*3) + (seg_length*2)
-        digit_x =  (self.wall_width//2) - (digit_width//2)
-        digit_y = (self.wall_height//2) - (digit_height//2)
+        digit_height = (seg_width*3) + (seg_length*2)
+        digit_x =  self.xpos + (self.wall_width//2) - (digit_width//2)
+        digit_y = self.ypos + (self.wall_height//2) - (digit_height//2)
 
         # compute segments origins
         a_x = digit_x + seg_width
@@ -143,15 +145,15 @@ class DigitWall:
 
         # create block arrays that represent the segments
         self.segment = [
-            [], [], [], [], [], []
+            [], [], [], [], [], [], []
         ]
-        _init_horiz_segment(SEG_A, a_x, a_y)
-        _init_vert_segment(SEG_B, b_x, b_y)
-        _init_vert_segment(SEG_C, c_x, c_y)
-        _init_horiz_segment(SEG_D, d_x, d_y)
-        _init_vert_segment(SEG_E, e_x, e_y)
-        _init_vert_segment(SEG_F, f_x, f_y)
-        _init_horiz_segment(SEG_G, g_x, g_y)
+        self._init_horiz_segment(SEG_A, a_x, a_y)
+        self._init_vert_segment(SEG_B, b_x, b_y)
+        self._init_vert_segment(SEG_C, c_x, c_y)
+        self._init_horiz_segment(SEG_D, d_x, d_y)
+        self._init_vert_segment(SEG_E, e_x, e_y)
+        self._init_vert_segment(SEG_F, f_x, f_y)
+        self._init_horiz_segment(SEG_G, g_x, g_y)
 
     def _init_horiz_segment(self, seg, x, y):
         self.segment[seg].append(x)
@@ -161,7 +163,7 @@ class DigitWall:
         self.segment[seg].append(y+self.seg_width-1)
         self.segment[seg].append(self.zpos)
 
-    def _init_vert_segment(self, seg, x, y, z):
+    def _init_vert_segment(self, seg, x, y):
         self.segment[seg].append(x)
         self.segment[seg].append(y)
         self.segment[seg].append(self.zpos)
@@ -171,11 +173,11 @@ class DigitWall:
 
 
     def _draw_wall(self):
-        self.mc.setBlocks(self.xpos, self.ypos, self.zpos
-                          self.xpos+self.width-1,
-                          self.ypos+self.height-1,
-                          self.zpos+self.thickness-1,
-                          wall_block)
+        self.mc.setBlocks(self.xpos, self.ypos, self.zpos,
+                          self.xpos+self.wall_width-1,
+                          self.ypos+self.wall_height-1,
+                          self.zpos+self.wall_thickness-1,
+                          self.wall_block)
         self._draw_digit(self.digit_value,ON)
 
     def _draw_digit(self, digit, on):
@@ -184,7 +186,7 @@ class DigitWall:
             block = self.digit_block
         seg_on = DIGIT[digit]
         i =0        # segment index 
-        for seg in self.seg:
+        for seg in self.segment:
             if (seg_on[i]):
                 self.mc.setBlocks(seg[0], seg[1], seg[2],
                                   seg[3], seg[4], seg[5],
