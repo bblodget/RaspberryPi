@@ -34,14 +34,14 @@ import RPi.GPIO as GPIO
 # where Y is up/down dimension
 FLOOR_ORIGIN = (0,0,0)
 FLOOR_SIZE = (25,1,16)
-FLOOR_TYPE = block.DIAMOND_BLOCK
+FLOOR_TYPE = block.BEDROCK
 
 AIR_SIZE = (10,100,10)
 
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 
-A_WALL_LOC = (6,1,7)
+A_WALL_LOC = (5,1,9)
 
 BIT_TYPE = block.GOLD_BLOCK
 
@@ -114,7 +114,8 @@ def setup():
 
     # create the A Wall
     a_wall = digit_wall.DigitWall(mc, A_WALL_LOC[0], A_WALL_LOC[1], A_WALL_LOC[2],
-                                 8,8,1,block.GOLD_BLOCK,block.DIAMOND_BLOCK,7)
+                                 block.GOLD_BLOCK,block.DIAMOND_BLOCK,0)
+    a_wall.update(8)
 
     # move the player to the floor
     mc.player.setPos(12,2,0)

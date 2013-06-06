@@ -24,7 +24,14 @@ from __future__ import division
 # Module Constants
 ####################
 
-# states of a segment
+# DigitWall Dimensions
+WALL_WIDTH = 8
+WALL_HEIGHT = 9
+
+# Segment Dimensions
+SEG_LENGTH = 2
+
+# Segment states (illumination)
 ON = True
 OFF = False
 
@@ -39,18 +46,19 @@ SEG_G = 6
 
 # Define the segments used in each digit.
 #
-#   --a--
-#   |   |
-#   f   b
-#   |   |
-#   --g--         
-#   |   |
-#   e   c
-#   |   |
-#   --d--         
+#   ........
+#   ...aa...
+#   ..f..b..
+#   ..f..b..
+#   ...gg...
+#   ..e..c..
+#   ..e..c..
+#   ...dd...
+#   .......*
 #
 # DIGIT[x] = [a,b,c,d,e,f,g]
-# ON = Illuminated segment
+# * is the origin. Left is pos x.
+# Up is pos y.
 
 DIGIT = [
     [ON,  ON, ON,  ON,  ON,  ON,  OFF],
@@ -72,8 +80,7 @@ DIGIT = [
 
 class DigitWall:
 
-    def __init__(self, mc, xpos, ypos, zpos, width, height,
-                 thickness, wall_block, digit_block, digit_value):
+    def __init__(self, mc, xpos, ypos, zpos, wall_block, digit_block, digit_value):
         # save a copy of the minecraft object
         self.mc = mc
 
@@ -83,11 +90,6 @@ class DigitWall:
         self.ypos = ypos
         self.zpos = zpos
 
-        # shape of the wall
-        self.wall_width = width
-        self.wall_height = height
-        self.wall_thickness = thickness
-        
         # blocks that the wall is made of
         self.wall_block = wall_block
         self.digit_block = digit_block
@@ -102,85 +104,60 @@ class DigitWall:
         self._draw_wall()
 
     def _init_segments(self):
-        # compute segment length and width
-        w = self.wall_width // 2
-        h = self.wall_height // 4
-        if (w > h):
-            seg_length = h
-        else:
-            seg_length = w
-        if seg_length < 1:
-            seg_length = 1
-        seg_width = seg_length // 4
-        if seg_width < 1:
-            seg_width = 1
-
-        # store segment width and length
-        self.seg_length = seg_length
-        self.seg_width = seg_width
-
-        print "seg_length: ",seg_length, " seg_width: ",seg_width
-
-        # compute digit width, height and origin
-        digit_width = (seg_width*2) + seg_length
-        digit_height = (seg_width*3) + (seg_length*2)
-        digit_x =  self.xpos + (self.wall_width//2) - (digit_width//2)
-        digit_y = self.ypos + (self.wall_height//2) - (digit_height//2)
-
-        # compute segments origins
-        a_x = digit_x + seg_width
-        a_y = digit_y
-        b_x = a_x + seg_length
-        b_y = digit_y + seg_width
-        c_x = b_x
-        c_y = b_y + seg_width
-        d_x = a_x
-        d_y = digit_height - seg_width
-        e_x = digit_x
-        e_y = c_y
-        f_x = digit_x
-        f_y = b_y
-        g_x = a_x
-        g_y = c_y - seg_width
-
         # create block arrays that represent the segments
         self.segment = [
             [], [], [], [], [], [], []
         ]
-        self._init_horiz_segment(SEG_A, a_x, a_y)
-        self._init_vert_segment(SEG_B, b_x, b_y)
-        self._init_vert_segment(SEG_C, c_x, c_y)
-        self._init_horiz_segment(SEG_D, d_x, d_y)
-        self._init_vert_segment(SEG_E, e_x, e_y)
-        self._init_vert_segment(SEG_F, f_x, f_y)
-        self._init_horiz_segment(SEG_G, g_x, g_y)
+        #   ...aa...
+        #   ..f..b..
+        #   ..f..b..
+        #   ...gg...
+        #   ..e..c..
+        #   ..e..c..
+        #   ...dd...
+        #   .......*
+        #
+        # * is the origin. Left is pos x. Up is pos y.
+        self._init_horiz_segment(SEG_A, 3, 7)
+        self._init_vert_segment(SEG_B, 2, 5)
+        self._init_vert_segment(SEG_C, 2, 2)
+        self._init_horiz_segment(SEG_D, 3, 1)
+        self._init_vert_segment(SEG_E, 5, 2)
+        self._init_vert_segment(SEG_F, 5, 5)
+        self._init_horiz_segment(SEG_G, 3, 4)
 
     def _init_horiz_segment(self, seg, x, y):
-        mirror_y =self.ypos+self.wall_height-y
-        mirror_x =self.xpos+self.wall_width-x
-        self.segment[seg].append(mirror_x)
-        self.segment[seg].append(mirror_y)
+        # convert x,y to absolute coordinates
+        x = x + self.xpos
+        y = y + self.ypos
+
+        # define params to create seg using mc.setBlocks cmd
+        self.segment[seg].append(x)
+        self.segment[seg].append(y)
         self.segment[seg].append(self.zpos)
-        self.segment[seg].append(mirror_x-self.seg_length-1)
-        self.segment[seg].append(mirror_y-self.seg_width-1)
+        self.segment[seg].append(x+SEG_LENGTH-1)
+        self.segment[seg].append(y)
         self.segment[seg].append(self.zpos)
 
     def _init_vert_segment(self, seg, x, y):
-        mirror_y =self.ypos+self.wall_height-y
-        mirror_x =self.xpos+self.wall_width-x
-        self.segment[seg].append(mirror_x)
-        self.segment[seg].append(mirror_y)
+        # convert x,y to absolute coordinates
+        x = x + self.xpos
+        y = y + self.ypos
+
+        # define params to create seg using mc.setBlocks cmd
+        self.segment[seg].append(x)
+        self.segment[seg].append(y)
         self.segment[seg].append(self.zpos)
-        self.segment[seg].append(mirror_x-self.seg_width-1)
-        self.segment[seg].append(mirror_y-self.seg_length-1)
+        self.segment[seg].append(x)
+        self.segment[seg].append(y+SEG_LENGTH-1)
         self.segment[seg].append(self.zpos)
 
 
     def _draw_wall(self):
         self.mc.setBlocks(self.xpos, self.ypos, self.zpos,
-                          self.xpos+self.wall_width-1,
-                          self.ypos+self.wall_height-1,
-                          self.zpos+self.wall_thickness-1,
+                          self.xpos+WALL_WIDTH-1,
+                          self.ypos+WALL_HEIGHT-1,
+                          self.zpos,
                           self.wall_block)
         self._draw_digit(self.digit_value,ON)
 
@@ -202,14 +179,7 @@ class DigitWall:
         # Draw the new value
         self._draw_digit(self.digit_value,OFF)
         self.digit_value = digit_value
-        self._draw_digit(self.digit_value,OFF)
+        self._draw_digit(self.digit_value,ON)
 
 
-
-        
-
-        
-
-
-        
 
