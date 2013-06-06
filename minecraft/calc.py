@@ -41,8 +41,11 @@ AIR_SIZE = (10,100,10)
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 
-A_WALL_LOC = (3,0,16)
+A_WALL_LOC = (2,0,16)
 B_WALL_LOC = (15,0,16)
+
+V_PLUS_LOC = (11,5,16)
+H_PLUS_LOC = (12,4,16)
 
 BIT_TYPE = block.GOLD_BLOCK
 
@@ -125,9 +128,21 @@ def setup():
                                   block.GOLD_BLOCK,0,
                                   B_PIN)
 
+    # draw a plus sign between the wall blocks
+    draw_plus()
+
     # move the player to the floor
     mc.player.setPos(12,2,0)
 
+def draw_plus():
+    # vertical line
+    mc.setBlocks(V_PLUS_LOC[0], V_PLUS_LOC[1], V_PLUS_LOC[2],
+                 V_PLUS_LOC[0]+2, V_PLUS_LOC[1], V_PLUS_LOC[2],
+                block.GOLD_BLOCK)
+    # horizontal line
+    mc.setBlocks(H_PLUS_LOC[0], H_PLUS_LOC[1], H_PLUS_LOC[2],
+                 H_PLUS_LOC[0], H_PLUS_LOC[1]+2, H_PLUS_LOC[2],
+                block.GOLD_BLOCK)
 
 def run():
     global mc, led_on, a_wall, b_wall
