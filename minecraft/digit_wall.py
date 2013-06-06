@@ -118,7 +118,7 @@ class DigitWall:
         # location of the three bit blocks
         # which represent a 3-bit binary number.
         # bit_block[0] is LSB
-        z = self.zpos - 9
+        z = self.zpos - 14
         self.bit_loc = [
             (self.xpos+1,self.ypos,z), 
             (self.xpos+3,self.ypos,z), 
