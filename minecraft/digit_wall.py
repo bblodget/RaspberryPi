@@ -18,6 +18,7 @@ All rights reserved.
 """
 
 from __future__ import division
+import RPi.GPIO as GPIO
 
 
 ####################
@@ -35,6 +36,9 @@ SEG_LENGTH = 4
 ON = True
 OFF = False
 
+# Number of bits to use
+NUM_BITS = 3
+
 # used to index into DIGIT
 SEG_A = 0
 SEG_B = 1
@@ -47,18 +51,17 @@ SEG_G = 6
 # Define the segments used in each digit.
 #
 #   ........
-#   ...aa...
+#   ..xaax..
 #   ..f..b..
 #   ..f..b..
-#   ...gg...
+#   ..xggx..
 #   ..e..c..
 #   ..e..c..
-#   ...dd...
+#   ..xddx..
 #   .......*
 #
-# DIGIT[x] = [a,b,c,d,e,f,g]
-# * is the origin. Left is pos x.
-# Up is pos y.
+# * is the origin. Left is positive x. Up is pos y.
+# x is overlap
 
 DIGIT = [
     [ON,  ON, ON,  ON,  ON,  ON,  OFF],
@@ -66,8 +69,8 @@ DIGIT = [
     [ON,  ON, OFF, ON,  ON,  OFF, ON],
     [ON,  ON, ON,  ON,  OFF, OFF, ON],
     [OFF, ON, ON,  OFF, OFF, ON,  ON],
-    [ON,  ON, OFF, ON,  OFF, ON,  ON],
-    [ON,  ON, OFF, ON,  ON,  ON,  ON],
+    [ON,  OFF, ON, ON,  OFF, ON,  ON],
+    [ON,  OFF, ON, ON,  ON,  ON,  ON],
     [ON,  ON, ON,  OFF, OFF, OFF, OFF],
     [ON,  ON, ON,  ON,  ON,  ON,  ON],
     [ON,  ON, ON,  ON,  OFF, ON,  ON],
@@ -78,9 +81,11 @@ DIGIT = [
 # Classes
 ####################
 
+
 class DigitWall:
 
-    def __init__(self, mc, xpos, ypos, zpos, wall_block, digit_block, digit_value):
+    def __init__(self, mc, xpos, ypos, zpos, wall_block, digit_block,
+                 digit_value, bit_pin):
         # save a copy of the minecraft object
         self.mc = mc
 
@@ -100,8 +105,35 @@ class DigitWall:
         # initialize the segment fields
         self._init_segments()
 
+        # initialize the bit blocks
+        self._init_bit_blocks(bit_pin)
+
         # create the wall
         self._draw_wall()
+
+        # draw the bit blocks
+        self._draw_bits()
+
+    def _init_bit_blocks(self, bit_pin):
+        # location of the three bit blocks
+        # which represent a 3-bit binary number.
+        # bit_block[0] is LSB
+        z = self.zpos - 9
+        self.bit_loc = [
+            (self.xpos+1,self.ypos,z), 
+            (self.xpos+3,self.ypos,z), 
+            (self.xpos+5,self.ypos,z)
+        ]
+
+        # Each bit block can be ON or OFF
+        # initialize the states
+        self.bit_state = [OFF, OFF, OFF]
+
+        # Each bit controls a GPIO pin 
+        # This pin is asserted when the 
+        # the bit is on and deasserted when
+        # the bit is off.
+        self.bit_pin = bit_pin
 
     def _init_segments(self):
         # create block arrays that represent the segments
@@ -117,7 +149,7 @@ class DigitWall:
         #   ..xddx..
         #   .......*
         #
-        # * is the origin. Left is pos x. Up is pos y.
+        # * is the origin. Left is positive x. Up is pos y.
         # x is overlap
         self._init_horiz_segment(SEG_A, 2, 7)
         self._init_vert_segment(SEG_B, 2, 4)
@@ -130,34 +162,37 @@ class DigitWall:
     def _init_horiz_segment(self, seg, x, y):
         # convert x,y to absolute coordinates
         x = x + self.xpos
-        y = y + self.ypos
+        y = y + self.ypos + 1   # +1 because wall above floor
+        z = self.zpos
 
         # define params to create seg using mc.setBlocks cmd
         self.segment[seg].append(x)
         self.segment[seg].append(y)
-        self.segment[seg].append(self.zpos)
+        self.segment[seg].append(z)
         self.segment[seg].append(x+SEG_LENGTH-1)
         self.segment[seg].append(y)
-        self.segment[seg].append(self.zpos)
+        self.segment[seg].append(z)
 
     def _init_vert_segment(self, seg, x, y):
         # convert x,y to absolute coordinates
         x = x + self.xpos
-        y = y + self.ypos
+        y = y + self.ypos + 1   # +1 because wall above floor
+        z = self.zpos 
 
         # define params to create seg using mc.setBlocks cmd
         self.segment[seg].append(x)
         self.segment[seg].append(y)
-        self.segment[seg].append(self.zpos)
+        self.segment[seg].append(z)
         self.segment[seg].append(x)
         self.segment[seg].append(y+SEG_LENGTH-1)
-        self.segment[seg].append(self.zpos)
+        self.segment[seg].append(z)
 
 
     def _draw_wall(self):
-        self.mc.setBlocks(self.xpos, self.ypos, self.zpos,
+        # ypos+1 because wall above floor
+        self.mc.setBlocks(self.xpos, self.ypos+1, self.zpos,
                           self.xpos+WALL_WIDTH-1,
-                          self.ypos+WALL_HEIGHT-1,
+                          self.ypos+WALL_HEIGHT,
                           self.zpos,
                           self.wall_block)
         self._draw_digit(self.digit_value,ON)
@@ -175,12 +210,53 @@ class DigitWall:
                                   block)
             i = i + 1
 
-    def update(self, digit_value):
-        # Erase the old value 
-        # Draw the new value
-        self._draw_digit(self.digit_value,OFF)
-        self.digit_value = digit_value
-        self._draw_digit(self.digit_value,ON)
+    def _draw_bits(self):
+        """ Redraws all the bit blocks based on their
+        state.  Also asserts GPIO pins for bits that
+        are ON.  Also calculates a new digit_value based
+        on the state of the bits.
+        """
+        new_value = 0
+        for i in range(NUM_BITS):
+            if (self.bit_state[i] == ON):
+                self.mc.setBlock(self.bit_loc[i][0],
+                                 self.bit_loc[i][1],
+                                 self.bit_loc[i][2],
+                                 self.digit_block)
+                GPIO.output(self.bit_pin[i],GPIO.HIGH)
+                new_value = new_value + 2**i
+            else:
+                self.mc.setBlock(self.bit_loc[i][0],
+                                 self.bit_loc[i][1],
+                                 self.bit_loc[i][2],
+                                 self.wall_block)
+                GPIO.output(self.bit_pin[i],GPIO.LOW)
+        self.digit_value = new_value
+
+    def update(self, blockHits):
+        """ Process blockHits events.  Checks
+        If any of the bit blocks have been touched.
+        If so toggles them and redraws bit blocks
+        and digit_wall to represent the new state.
+        """
+        if blockHits:
+            for blockHit in blockHits:
+                x,y,z = blockHit.pos
+                # check if a block_bit was touched
+                for i in range(NUM_BITS):
+                    if (self.bit_loc[i][0] == x and
+                        self.bit_loc[i][1] == y and
+                        self.bit_loc[i][2] == z):
+
+                        # Erase the old wall digit
+                        self._draw_digit(self.digit_value,OFF)
+                        # Toggle the bit that was touched
+                        self.bit_state[i] = not self.bit_state[i]
+                        # Draw the bits. Also gets new 
+                        # digit value
+                        self._draw_bits()
+                        # Draw the new wall digit
+                        self._draw_digit(self.digit_value,ON)
 
 
 

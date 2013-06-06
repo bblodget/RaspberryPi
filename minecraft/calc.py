@@ -41,7 +41,7 @@ AIR_SIZE = (10,100,10)
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 
-A_WALL_LOC = (5,1,9)
+A_WALL_LOC = (5,0,12)
 
 BIT_TYPE = block.GOLD_BLOCK
 
@@ -68,7 +68,7 @@ b_state = [False, False, False]
 ####################
 
 def setup():
-    global mc
+    global mc, a_wall
 
     # init the GPIO
     GPIO.cleanup()
@@ -102,77 +102,36 @@ def setup():
 
     # create the A "bit blocks".
     # represents the A addend.
-    for a_bit in A_BITS_LOC:
-        mc.setBlocks(a_bit[0],a_bit[1],a_bit[2],
-                    a_bit[0],a_bit[1],a_bit[2], BIT_TYPE)
+    #for a_bit in A_BITS_LOC:
+    #    mc.setBlocks(a_bit[0],a_bit[1],a_bit[2],
+    #                a_bit[0],a_bit[1],a_bit[2], BIT_TYPE)
 
     # create the B "bit blocks".
     # represents the B addend.
-    for b_bit in B_BITS_LOC:
-        mc.setBlocks(b_bit[0],b_bit[1],b_bit[2],
-                    b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
+    #for b_bit in B_BITS_LOC:
+    #    mc.setBlocks(b_bit[0],b_bit[1],b_bit[2],
+    #                b_bit[0],b_bit[1],b_bit[2], BIT_TYPE)
 
     # create the A Wall
-    a_wall = digit_wall.DigitWall(mc, A_WALL_LOC[0], A_WALL_LOC[1], A_WALL_LOC[2],
-                                 block.GOLD_BLOCK,block.DIAMOND_BLOCK,0)
-    a_wall.update(8)
+    a_wall = digit_wall.DigitWall(mc, A_WALL_LOC[0], A_WALL_LOC[1], 
+                                 A_WALL_LOC[2], block.GOLD_BLOCK,
+                                  block.DIAMOND_BLOCK,0,
+                                  A_PIN)
 
     # move the player to the floor
     mc.player.setPos(12,2,0)
 
 
-def toggle_bit(bit_type, bit_loc, index):
-    if (bit_type == B_TYPE):
-        # B type bit
-        if (b_state[index]):
-            # turn off bit
-            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
-            GPIO.output(B_PIN[index],GPIO.LOW)
-            print "b",index," off"
-        else:
-            # turn on bit
-            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
-            GPIO.output(B_PIN[index],GPIO.HIGH)
-            print "b",index," on"
-        b_state[index] = ~b_state[index]
-    else:
-        # A type bit
-        if (a_state[index]):
-            # turn off bit
-            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.AIR)
-            GPIO.output(A_PIN[index],GPIO.LOW)
-            print "a",index," off"
-        else:
-            # turn on bit
-            mc.setBlock(bit_loc[0],bit_loc[1]+1,bit_loc[2],block.TORCH)
-            GPIO.output(A_PIN[index],GPIO.HIGH)
-            print "a",index," on"
-        a_state[index] = ~a_state[index]
-
 def run():
-    global mc, led_on
+    global mc, led_on, a_wall
 
     #loop until Ctrl C
     try:
         while True:
             blockHits = mc.events.pollBlockHits()
             if blockHits:
-                for blockHit in blockHits:
-                    x,y,z = blockHit.pos
-                    # check if A_BIT block touched
-                    index = -1
-                    for a_bit in A_BITS_LOC:
-                        index = index + 1
-                        if (a_bit[0] == x and a_bit[2] == z):
-                            toggle_bit(A_TYPE, a_bit, index)
-                    # check if B_BIT block touched
-                    index = -1
-                    for b_bit in B_BITS_LOC:
-                        index = index + 1
-                        if (b_bit[0] == x and b_bit[2] == z):
-                            toggle_bit(B_TYPE, b_bit, index)
+                a_wall.update(blockHits)
 
-                            
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("stopped")
