@@ -29,7 +29,7 @@ WALL_WIDTH = 8
 WALL_HEIGHT = 9
 
 # Segment Dimensions
-SEG_LENGTH = 2
+SEG_LENGTH = 4
 
 # Segment states (illumination)
 ON = True
@@ -108,23 +108,24 @@ class DigitWall:
         self.segment = [
             [], [], [], [], [], [], []
         ]
-        #   ...aa...
+        #   ..xaax..
         #   ..f..b..
         #   ..f..b..
-        #   ...gg...
+        #   ..xggx..
         #   ..e..c..
         #   ..e..c..
-        #   ...dd...
+        #   ..xddx..
         #   .......*
         #
         # * is the origin. Left is pos x. Up is pos y.
-        self._init_horiz_segment(SEG_A, 3, 7)
-        self._init_vert_segment(SEG_B, 2, 5)
-        self._init_vert_segment(SEG_C, 2, 2)
-        self._init_horiz_segment(SEG_D, 3, 1)
-        self._init_vert_segment(SEG_E, 5, 2)
-        self._init_vert_segment(SEG_F, 5, 5)
-        self._init_horiz_segment(SEG_G, 3, 4)
+        # x is overlap
+        self._init_horiz_segment(SEG_A, 2, 7)
+        self._init_vert_segment(SEG_B, 2, 4)
+        self._init_vert_segment(SEG_C, 2, 1)
+        self._init_horiz_segment(SEG_D, 2, 1)
+        self._init_vert_segment(SEG_E, 5, 1)
+        self._init_vert_segment(SEG_F, 5, 4)
+        self._init_horiz_segment(SEG_G, 2, 4)
 
     def _init_horiz_segment(self, seg, x, y):
         # convert x,y to absolute coordinates

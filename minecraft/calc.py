@@ -34,7 +34,7 @@ import RPi.GPIO as GPIO
 # where Y is up/down dimension
 FLOOR_ORIGIN = (0,0,0)
 FLOOR_SIZE = (25,1,16)
-FLOOR_TYPE = block.BEDROCK
+FLOOR_TYPE = block.OBSIDIAN
 
 AIR_SIZE = (10,100,10)
 
