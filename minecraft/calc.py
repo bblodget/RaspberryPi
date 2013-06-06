@@ -41,7 +41,8 @@ AIR_SIZE = (10,100,10)
 A_BITS_LOC = [ (6,0,3), (8,0,3), (10,0,3)]
 B_BITS_LOC = [ (14,0,3), (16,0,3), (18,0,3)]
 
-A_WALL_LOC = (5,0,16)
+A_WALL_LOC = (3,0,16)
+B_WALL_LOC = (15,0,16)
 
 BIT_TYPE = block.GOLD_BLOCK
 
@@ -68,7 +69,7 @@ b_state = [False, False, False]
 ####################
 
 def setup():
-    global mc, a_wall
+    global mc, a_wall, b_wall
 
     # init the GPIO
     GPIO.cleanup()
@@ -118,12 +119,18 @@ def setup():
                                   block.GOLD_BLOCK,0,
                                   A_PIN)
 
+    # create the B wall
+    b_wall = digit_wall.DigitWall(mc, B_WALL_LOC[0], B_WALL_LOC[1], 
+                                 B_WALL_LOC[2], block.DIAMOND_BLOCK,
+                                  block.GOLD_BLOCK,0,
+                                  B_PIN)
+
     # move the player to the floor
     mc.player.setPos(12,2,0)
 
 
 def run():
-    global mc, led_on, a_wall
+    global mc, led_on, a_wall, b_wall
 
     #loop until Ctrl C
     try:
@@ -131,6 +138,7 @@ def run():
             blockHits = mc.events.pollBlockHits()
             if blockHits:
                 a_wall.update(blockHits)
+                b_wall.update(blockHits)
 
             time.sleep(0.1)
     except KeyboardInterrupt:
