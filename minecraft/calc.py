@@ -47,6 +47,9 @@ B_WALL_LOC = (15,0,16)
 V_PLUS_LOC = (11,5,16)
 H_PLUS_LOC = (12,4,16)
 
+
+PLAYER_INIT_POS = (11,2,-4)
+
 BIT_TYPE = block.GOLD_BLOCK
 
 A_PIN = [7, 11, 13]
@@ -132,7 +135,9 @@ def setup():
     draw_plus()
 
     # move the player to the floor
-    mc.player.setPos(12,2,0)
+    mc.player.setPos(PLAYER_INIT_POS[0],
+                     PLAYER_INIT_POS[1],
+                     PLAYER_INIT_POS[2])
 
 def draw_plus():
     # vertical line
